@@ -30,6 +30,8 @@ struct fcfsCompare
 void printResults(vector<process>&);
 void getResults();
 void FCFS(vector<process>);
+void RR(vector<process>, int);
+double calculateEfficiency(int, int);
 
 int main() {
     getResults();
@@ -42,6 +44,7 @@ void printResults(vector<process>& p){
         cout << "Service time = " << p[i].cpu_time << endl;
         cout << "Turnaround time = " << p[i].tat << endl;
     }
+    cout << endl;
 }
 
 void getResults() {
@@ -62,16 +65,24 @@ void getResults() {
         myProcesses.push_back(p);
     }
 
+    cout << "****** Final Project Scheduling Task 2 ******" << endl << endl;
     FCFS(myProcesses);
+    RR(myProcesses, 10);
+    RR(myProcesses, 50);
+    RR(myProcesses, 100);
 
     myFile.close();
 }
 
+double calculateEfficiency(int totalExecutionTime, int totalSwitchingTime) {
+    return ((double)totalExecutionTime) / (totalExecutionTime + totalSwitchingTime) * 100;
+}
+
 void FCFS(vector<process> processes){
     int clock = 0;
-    int avgWaiting = 0;
     int totalSwitchingTime = 0;
-    int cpuEfficiency;
+    double avgWaiting = 0;
+    double cpuEfficiency;
     priority_queue<process, vector<process>, fcfsCompare> fcfsQueue;
     
     for(int i=0; i < processes.size(); i++){
@@ -99,9 +110,52 @@ void FCFS(vector<process> processes){
     }
 
     avgWaiting = avgWaiting / processes.size();
-    cpuEfficiency = clock / totalSwitchingTime;
+    cpuEfficiency = calculateEfficiency(clock, totalSwitchingTime);//((double)clock) / (clock + totalSwitchingTime) * 100;
 
     cout << "FCFS (non-preemptive)" << endl << endl;
+
+    cout << "Total Time Required: " << clock << endl;
+    cout << "Average waiting time: " << avgWaiting << endl;
+    cout << "CPU Efficiency: " << cpuEfficiency << "%" << endl << endl;
+
+    printResults(processes);
+}
+
+void RR(vector<process> processes, int quantum){
+    int clock = 0;
+    int totalSwitchingTime = 0;
+    double avgWaiting = 0;
+    double cpuEfficiency;
+
+    queue<process> rr;
+    
+
+    for(int i=0; i < processes.size(); i++){
+        //in arrival time order due to nature of txt file
+        rr.push(processes[i]);
+    }
+
+    while(!rr.empty()){
+        process p = rr.front();
+        rr.pop();
+        if(p.cpu_time < quantum){
+            clock += p.cpu_time;
+            processes[p.id-1].completion_time = clock;
+            processes[p.id-1].tat = clock - processes[p.id-1].arrival_time;
+            avgWaiting += processes[p.id-1].tat - processes[p.id-1].cpu_time;
+        } else {
+            clock += quantum;
+            p.cpu_time -= quantum;
+            rr.push(p);
+        }
+        clock += SWITCH_TIME;
+        totalSwitchingTime += SWITCH_TIME;
+    }
+
+    avgWaiting = avgWaiting / processes.size();
+    cpuEfficiency = calculateEfficiency(clock, totalSwitchingTime);
+
+    cout << "Round Robin (preemptive) Q=" << quantum << endl << endl;
 
     cout << "Total Time Required: " << clock << endl;
     cout << "Average waiting time: " << avgWaiting << endl;
