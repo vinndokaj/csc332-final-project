@@ -27,7 +27,7 @@ struct fcfsCompare
     }
 };
 
-void printResults(vector<process>&);
+void printResults(vector<process>&, string);
 void getResults();
 void FCFS(vector<process>);
 void RR(vector<process>, int);
@@ -38,13 +38,32 @@ int main() {
     return 0;
 }
 
-void printResults(vector<process>& p){
+void printResults(vector<process>& p, string filename){
+    ofstream toCSV;
+    string s = "";
+
+    filename += ".csv";
+
+    cout << filename << endl;
+
+    toCSV.open(filename);
+    toCSV << "Process ID, Service Time, Turn Around Time\n";
     for(int i=0; i < p.size(); i++){
         cout << "Process " << p[i].id << ":" << endl;
         cout << "Service time = " << p[i].cpu_time << endl;
         cout << "Turnaround time = " << p[i].tat << endl;
+
+        s += to_string(p[i].id) + ",";
+        s += to_string(p[i].cpu_time) + ",";
+        s += to_string(p[i].tat) + "\n";
+        
+        cout << s << endl;
+        toCSV << s;
+
+        s = "";
     }
     cout << endl;
+    toCSV.close();
 }
 
 void getResults() {
@@ -118,7 +137,7 @@ void FCFS(vector<process> processes){
     cout << "Average waiting time: " << avgWaiting << endl;
     cout << "CPU Efficiency: " << cpuEfficiency << "%" << endl << endl;
 
-    printResults(processes);
+    printResults(processes, "FCFS_Results");
 }
 
 void RR(vector<process> processes, int quantum){
@@ -161,5 +180,5 @@ void RR(vector<process> processes, int quantum){
     cout << "Average waiting time: " << avgWaiting << endl;
     cout << "CPU Efficiency: " << cpuEfficiency << "%" << endl << endl;
 
-    printResults(processes);
+    printResults(processes, ("RR_RESULTS_Q_" + to_string(quantum)));
 }
